@@ -11,12 +11,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
 
     private static final int DEFAULT_CAPACITY = 10;
 
-    private static final Object[] EMPTY_ELEMENTDATA ={};
+    private static final Object[] EMPTY_ELEMENTDATA = {};
 
-    private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA  = {};
-
+    private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
     transient Object[] elementData;
-
     private int size;
 
     public ArrayList(int initialCapacity) {
@@ -29,7 +28,9 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         }
     }
 
-    public ArrayList() { this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA; }
+    public ArrayList() {
+        this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+    }
 
     public ArrayList(Collection<? extends E> c) {
         elementData = c.toArray();
@@ -42,16 +43,32 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         }
     }
 
-    public void trimToSize(){
+    private static int hugeCapacity(int minCapacity) {
+        if (minCapacity < 0) // overflow
+            throw new OutOfMemoryError();
+        return (minCapacity > MAX_ARRAY_SIZE) ?
+                Integer.MAX_VALUE :
+                MAX_ARRAY_SIZE;
+    }
+
+    public static void main(final String[] args) {
+        java.util.ArrayList<String> a = new java.util.ArrayList<>();
+        a.add("a");
+        a.get(-1);
+        //a.get(3);
+
+    }
+
+    public void trimToSize() {
         modCount++;
         if (size < elementData.length) {
             elementData = (size == 0) ? EMPTY_ELEMENTDATA : Arrays.copyOf(elementData, size);
         }
     }
 
-    public void ensureCapacity(int minCapacity){
-        int minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA)? 0 : DEFAULT_CAPACITY;
-        if(minCapacity > minExpand){
+    public void ensureCapacity(int minCapacity) {
+        int minExpand = (elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA) ? 0 : DEFAULT_CAPACITY;
+        if (minCapacity > minExpand) {
             ensureExplicitCapacity(minCapacity);
         }
     }
@@ -72,7 +89,6 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         ensureExplicitCapacity(minCapacity);
     }
 
-    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
     private void grow(int minCapacity) {
         // overflow-conscious code
         int oldCapacity = elementData.length;
@@ -85,33 +101,26 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         elementData = Arrays.copyOf(elementData, newCapacity);
     }
 
-    private static int hugeCapacity(int minCapacity) {
-        if (minCapacity < 0) // overflow
-            throw new OutOfMemoryError();
-        return (minCapacity > MAX_ARRAY_SIZE) ?
-                Integer.MAX_VALUE :
-                MAX_ARRAY_SIZE;
+    public int size() {
+        return size;
     }
-
-    public int size() { return size;}
-
 
     public boolean isEmpty() {
         return size == 0;
     }
 
-    public boolean contains(Object o){
+    public boolean contains(Object o) {
         return indexOf(o) >= 0;
     }
 
-    public int indexOf(Object o){
-        for(int i=0; i < size; i++){
+    public int indexOf(Object o) {
+        for (int i = 0; i < size; i++) {
             Object obj = elementData[i];
-            if(obj == null){
+            if (obj == null) {
                 if (o == null) {
                     return i;
                 }
-            }else{
+            } else {
                 if (obj.equals(o)) {
                     return i;
                 }
@@ -121,15 +130,15 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         return -1;
     }
 
-    public int lastIndexOf(Object o){
-        for(int i = size-1; i >=0; i--){
+    public int lastIndexOf(Object o) {
+        for (int i = size - 1; i >= 0; i--) {
             Object obj = elementData[i];
             if (obj == null) {
                 if (o == null) {
                     return i;
                 }
             } else {
-                if(obj.equals(o)){
+                if (obj.equals(o)) {
                     return i;
                 }
             }
@@ -137,10 +146,9 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         return -1;
     }
 
-
-    public Object clone(){
+    public Object clone() {
         try {
-            ArrayList<?> v = (ArrayList<?>)super.clone();
+            ArrayList<?> v = (ArrayList<?>) super.clone();
             v.elementData = Arrays.copyOf(elementData, size);
             return v;
         } catch (CloneNotSupportedException e) {
@@ -148,35 +156,36 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         }
     }
 
-    public Object[] toArray(){ return Arrays.copyOf(elementData,size); }
+    public Object[] toArray() {
+        return Arrays.copyOf(elementData, size);
+    }
 
-    public <T> T[] toArray(T[] a){
-        if(a.length < size){
-            return (T[])Arrays.copyOf(elementData, size, a.getClass());
+    public <T> T[] toArray(T[] a) {
+        if (a.length < size) {
+            return (T[]) Arrays.copyOf(elementData, size, a.getClass());
         }
         System.arraycopy(elementData, 0, a, 0, size);
-        if(a.length > size ){
+        if (a.length > size) {
             a[size] = null;
         }
         return a;
     }
 
-    E elementData(int index){
-        return (E)elementData[index];
+    E elementData(int index) {
+        return (E) elementData[index];
     }
 
-    public E get(int index){
+    public E get(int index) {
         rangeCheck(index);
         return elementData(index);
     }
 
-    public E set(int index, E element){
+    public E set(int index, E element) {
         rangeCheck(index);
         E oldValue = elementData(index);
         elementData[index] = element;
         return oldValue;
     }
-
 
     public boolean add(E e) {
         ensureCapacityInternal(size + 1);
@@ -187,7 +196,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
     public void add(int index, E element) {
         rangeCheckForAdd(index);
         ensureCapacityInternal(size + 1);
-        System.arraycopy(elementData, index, elementData, index+1, size - index);
+        System.arraycopy(elementData, index, elementData, index + 1, size - index);
         elementData[index] = element;
         size++;
     }
@@ -196,15 +205,40 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         rangeCheck(index);
         modCount++;
         E oldValue = elementData(index);
-        int numMoved = size - index -1;
+        int numMoved = size - index - 1;
         if (numMoved > 0) {
-            System.arraycopy(elementData, index+1, elementData, index, numMoved);
+            System.arraycopy(elementData, index + 1, elementData, index, numMoved);
         }
-        elementData[--size]=null;
+        elementData[--size] = null;
         return oldValue;
     }
 
+    public boolean remove(Object o) {
+        for(int i=0; i< size; i++) {
+            E element = elementData(i);
+            if (element == null) {
+                remove(i);
+                return true;
+            } else {
+                if(element.equals(o)){
+                    remove(i);
+                    return true;
+                }
+            }
 
+        }
+        return false;
+    }
+
+    private void fastRemove(int index) {
+        modCount++;
+        int numMoved = size - index -1;
+        if (numMoved > 0) {
+            System.arraycopy(elementData, index + 1, elementData, index, numMoved);
+        }
+
+        elementData[--size] = null;
+    }
 
     private void rangeCheckForAdd(int index) {
         if (index > size || index < 0) {
@@ -212,18 +246,81 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         }
     }
 
-    private String outOfBoundsMsg(int index) {
-        return "Index: "+index+", Size:"+size;
+    public void clear() {
+        modCount++;
+        //elementData = EMPTY_ELEMENTDATA; Clear data, not the contaner, the container is still there
+        for (int i = 0; i < size; i++) {
+            elementData[i] = null;
+        }
+        size = 0;
     }
 
+    private String outOfBoundsMsg(int index) {
+        return "Index: " + index + ", Size:" + size;
+    }
 
+    public boolean addAll(Collection<? extends E> c) {
+        /*        if (c == null) {
+            throw new NullPointerException("Input collection in null!");
+        } else {
+            for (E e : c) {
+                add(e);
+            }
+        }
+        return true;
+        */
+        //allocate a new array to hold all the data to be added.
+        Object[] a = c.toArray();
+        int numNew = a.length;
+        ensureCapacityInternal(size + numNew);
+        //Comparing added one by one, more efficient sometimes. Plz Google it.
+        System.arraycopy(a, 0, elementData, size, numNew);
+        size += numNew;
+        return numNew != 0;
+    }
 
+    public boolean addAll(int index, Collection<? extends E> c) {
+        rangeCheckForAdd(index)
+        Object[] elements = c.toArray();
+        ensureCapacityInternal(size+elements.length);
+        //in jdk, there is if( (size-index) > 0) it means append
+        int numMoved = size - index;
+        if (numMoved > 0) {
+            System.arraycopy(elementData, index, elementData, index+elements.length, numMoved);
+        }
+        System.arraycopy(elements, 0, elementData, index, elements.length);
+        size += elements.length;
+        return elements.length != 0;
+    }
 
+    /**
+     * I think my version is more clear.
+     * @param fromIndex
+     * @param toIndex
+     */
+    protected void removeRange(int fromIndex, int toIndex){
+        modCount++;
+        //Check if input valid
+        if (!(0 < fromIndex && fromIndex <= toIndex && toIndex <= size)) {
+            throw new IllegalArgumentException("Message!");
+        }
+        //Special cases
+        if (fromIndex == toIndex) {
+            return;
+        }
+        //Clear the elements to be removed.
+        for (int i=fromIndex; i< toIndex; i++) {
+            elementData[i] = null;
+        }
+        //copy toIndex:len-1 to fromIndex
+        if(toIndex < size) {
+            int numMoved = size - toIndex;
+            System.arraycopy(elementData, toIndex, elementData, fromIndex, numMoved);
+        }
+        size = size-(toIndex - fromIndex);
+    }
 
-
-
-
-    private void rangeCheck(int index){
+    private void rangeCheck(int index) {
         /*
         if (index < 0 || index > size - 1) {
             throw new IllegalArgumentException("Out of array range: "+index);
@@ -232,27 +329,6 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
         }
     }
-
-
-    public static void main(final String[] args){
-        java.util.ArrayList<String> a = new java.util.ArrayList<>();
-        a.add("a");
-        a.get(-1);
-        //a.get(3);
-
-    }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
