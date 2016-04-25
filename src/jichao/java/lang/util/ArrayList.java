@@ -1,5 +1,7 @@
 package jichao.java.lang.util;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 
@@ -146,7 +148,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         return -1;
     }
 
-    public Object clone() {
+    public Object clone()  {
         try {
             ArrayList<?> v = (ArrayList<?>) super.clone();
             v.elementData = Arrays.copyOf(elementData, size);
@@ -280,7 +282,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
     }
 
     public boolean addAll(int index, Collection<? extends E> c) {
-        rangeCheckForAdd(index)
+        rangeCheckForAdd(index);
         Object[] elements = c.toArray();
         ensureCapacityInternal(size+elements.length);
         //in jdk, there is if( (size-index) > 0) it means append
@@ -327,6 +329,55 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         }*/
         if (index >= size) {
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+        }
+    }
+
+    public boolean removeAll(Collection<?> c) {
+        Objects.requireNonNull(c);
+        return batchRemove(c, false);
+    }
+
+    public boolean retainAll(Collection<?> c) {
+        Objects.requireNonNull(c);
+        return batchRemove(c, true);
+    }
+
+    private boolean batchRemove(Collection<?> c, boolean complement) {
+        final Object[] elementData = this.elementData;
+        int r = 0, w =0;
+        boolean modified = false;
+        try {
+            for(;r<size;r++) {
+                if (c.contains(elementData[r]) == complement) {
+                    elementData[w++] = elementData[r];
+                }
+            }
+        }finally{
+            if (r != size) {
+                System.arraycopy(elementData, r, elementData, w, size - r);
+                w += size - r;
+            }
+            if (w != size) {
+                for(int i =w; i< size; i++) {
+                    elementData[i] = null;
+                }
+                modCount += size - w;
+                size = w;
+                modified = true;
+            }
+        }
+        return modified;
+    }
+
+    private void writeObject(ObjectOutputStream s) throws IOException {
+        int expectedModCount = modCount;
+        s.defaultWriteObject();
+        s.write(size);
+        for (int i = 0; i < size; i++) {
+            s.writeObject(elementData[i]);
+        }
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
         }
     }
 
