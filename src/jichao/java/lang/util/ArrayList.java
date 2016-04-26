@@ -1,6 +1,7 @@
 package jichao.java.lang.util;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
@@ -380,6 +381,21 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
             throw new ConcurrentModificationException();
         }
     }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        elementData = EMPTY_ELEMENTDATA;
+        stream.defaultReadObject();
+        stream.readInt();
+        if (size > 0) {
+            ensureCapacityInternal(size);
+            Object[] a = elementData;
+            for(int i = 0; i < size; i++) {
+                a[i] = stream.readObject();
+            }
+        }
+
+    }
+
 
 
 
