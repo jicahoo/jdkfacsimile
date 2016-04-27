@@ -1,15 +1,18 @@
 package jichao.java.lang.util;
 
+import com.sun.org.apache.xalan.internal.xsltc.dom.ArrayNodeListIterator;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Created by zhangj52 on 4/20/2016.
  */
-public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAccess, Cloneable, Serializable{
+public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAccess, Cloneable, Serializable {
     private static final long serialVersionUIS = 8683452581122892189L;
 
     private static final int DEFAULT_CAPACITY = 10;
@@ -149,7 +152,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         return -1;
     }
 
-    public Object clone()  {
+    public Object clone() {
         try {
             ArrayList<?> v = (ArrayList<?>) super.clone();
             v.elementData = Arrays.copyOf(elementData, size);
@@ -217,13 +220,13 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
     }
 
     public boolean remove(Object o) {
-        for(int i=0; i< size; i++) {
+        for (int i = 0; i < size; i++) {
             E element = elementData(i);
             if (element == null) {
                 remove(i);
                 return true;
             } else {
-                if(element.equals(o)){
+                if (element.equals(o)) {
                     remove(i);
                     return true;
                 }
@@ -235,7 +238,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
 
     private void fastRemove(int index) {
         modCount++;
-        int numMoved = size - index -1;
+        int numMoved = size - index - 1;
         if (numMoved > 0) {
             System.arraycopy(elementData, index + 1, elementData, index, numMoved);
         }
@@ -285,11 +288,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
     public boolean addAll(int index, Collection<? extends E> c) {
         rangeCheckForAdd(index);
         Object[] elements = c.toArray();
-        ensureCapacityInternal(size+elements.length);
+        ensureCapacityInternal(size + elements.length);
         //in jdk, there is if( (size-index) > 0) it means append
         int numMoved = size - index;
         if (numMoved > 0) {
-            System.arraycopy(elementData, index, elementData, index+elements.length, numMoved);
+            System.arraycopy(elementData, index, elementData, index + elements.length, numMoved);
         }
         System.arraycopy(elements, 0, elementData, index, elements.length);
         size += elements.length;
@@ -298,10 +301,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
 
     /**
      * I think my version is more clear.
+     *
      * @param fromIndex
      * @param toIndex
      */
-    protected void removeRange(int fromIndex, int toIndex){
+    protected void removeRange(int fromIndex, int toIndex) {
         modCount++;
         //Check if input valid
         if (!(0 < fromIndex && fromIndex <= toIndex && toIndex <= size)) {
@@ -312,15 +316,15 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
             return;
         }
         //Clear the elements to be removed.
-        for (int i=fromIndex; i< toIndex; i++) {
+        for (int i = fromIndex; i < toIndex; i++) {
             elementData[i] = null;
         }
         //copy toIndex:len-1 to fromIndex
-        if(toIndex < size) {
+        if (toIndex < size) {
             int numMoved = size - toIndex;
             System.arraycopy(elementData, toIndex, elementData, fromIndex, numMoved);
         }
-        size = size-(toIndex - fromIndex);
+        size = size - (toIndex - fromIndex);
     }
 
     private void rangeCheck(int index) {
@@ -345,21 +349,21 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
 
     private boolean batchRemove(Collection<?> c, boolean complement) {
         final Object[] elementData = this.elementData;
-        int r = 0, w =0;
+        int r = 0, w = 0;
         boolean modified = false;
         try {
-            for(;r<size;r++) {
+            for (; r < size; r++) {
                 if (c.contains(elementData[r]) == complement) {
                     elementData[w++] = elementData[r];
                 }
             }
-        }finally{
+        } finally {
             if (r != size) {
                 System.arraycopy(elementData, r, elementData, w, size - r);
                 w += size - r;
             }
             if (w != size) {
-                for(int i =w; i< size; i++) {
+                for (int i = w; i < size; i++) {
                     elementData[i] = null;
                 }
                 modCount += size - w;
@@ -389,15 +393,89 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         if (size > 0) {
             ensureCapacityInternal(size);
             Object[] a = elementData;
-            for(int i = 0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 a[i] = stream.readObject();
             }
         }
 
     }
 
+    public ListIterator<E> listIterator(int index) {
+        if (index < 0 || index > size) {
+            throw new IndexOutOfBoundsException("Index :" + index);
+        }
+        return new ListItr(index);
+    }
 
+    private class Itr implements Iterator<E> {
+        int cursor;
+        int lastRet = -1;
+        int expectedModCount = modCount; //A little like closure
+        public boolean hasNext(){
+            return cursor != size;
+        }
 
+        public E next() {
+            checkForComodification();
+            int i = cursor;
+            if (i > size) {
+                throw new NoSuchElementException();
+            }
+
+            Object[] elementData = ArrayList.this.elementData;
+
+            if (i >= elementData.length) {
+                throw new ConcurrentModificationException();
+            }
+            cursor = i+1;
+            return (E)elementData[lastRet = i];
+        }
+
+        public void remove(){
+            if (lastRet < 0) {
+                throw new IllegalStateException();
+            }
+
+            checkForComodification();
+
+            try {
+                ArrayList.this.remove(lastRet);
+                cursor = lastRet;
+                lastRet = -1;
+                expectedModCount = modCount;
+            } catch (IndexOutOfBoundsException ex) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        public void forEachRemaining(Consumer<? super E> consumer) {
+            Objects.requireNonNull(consumer);
+            final int size = ArrayList.this.size;
+            int i = cursor;
+            if (i > size) {
+                return;
+            }
+            final Object[] elementData = ArrayList.this.elementData;
+            if (i >= elementData.length) {
+                throw new ConcurrentModificationException();
+            }
+
+            while (i != size && modCount == expectedModCount) {
+                consumer.accept((E)elementData[i++]);
+            }
+
+            cursor = i;
+            lastRet = i -1 ;
+            checkForComodification();
+        }
+
+        final void checkForComodification() {
+            if (modCount != expectedModCount) {
+                throw new ConcurrentModificationException();
+            }
+
+        }
+    }
 
 
 }
